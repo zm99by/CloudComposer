@@ -12,7 +12,52 @@ Here's a basic outline of the steps to deploy to Cloud Composer using GitHub Act
 
 Here is an example of a GitHub Actions workflow that deploys to Cloud Composer:
 
-```yamp
+```yaml
+name: Deploy to Cloud Composer
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - features/*
+
+env:
+  GCP_PROJECT: my-gcp-project
+  GCP_COMPOSER_LOCATION: us-central1
+  GCP_COMPOSER_ENVIRONMENT: my-composer-environment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Authenticate to GCP
+      uses: google-auth/setup-gcloud@v2
+      with:
+        service_account_email: ${{ secrets.GCP_SA_EMAIL }}
+        project_id: ${{ env.GCP_PROJECT }}
+
+    - name: Deploy to Cloud Composer
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/develop" && "${{ github.event_name }}" == "pull_request" ]]; then
+          gcloud composer environments update ${GCP_COMPOSER_ENVIRONMENT} \
+            --location ${GCP_COMPOSER_LOCATION} \
+            --update-dag
+        else
+          gcloud composer environments update ${GCP_COMPOSER_ENVIRONMENT} \
+            --location ${GCP_COMPOSER_LOCATION} \
+            --update-dag-run
+        fi
+
+```
+
+
+```yaml
 name: Deploy to Cloud Composer
 
 on:
