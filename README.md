@@ -86,3 +86,91 @@ jobs:
           --environment-variables=GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_BUCKET=$CLOUD_STORAGE_BUCKET
 
 ```
+
+deploy to Cloud Composer in Google Cloud Platform (GCP) with manual deployment to the dev environment and automatic deployment to feature branches.
+
+```
+
+name: Deploy to Cloud Composer
+
+on:
+  push:
+    branches:
+      - dev
+      - features/*
+
+env:
+  GCP_PROJECT: my-gcp-project
+  GCP_COMPOSER_LOCATION: us-central1
+  GCP_COMPOSER_ENVIRONMENT: my-composer-environment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Authenticate to GCP
+      uses: google-auth/setup-gcloud@v2
+      with:
+        service_account_email: ${{ secrets.GCP_SA_EMAIL }}
+        project_id: ${{ env.GCP_PROJECT }}
+
+    - name: Update Cloud Composer
+      if: ${{ startsWith(github.ref, 'refs/heads/features/') }}
+      run: |
+        gcloud composer environments update ${GCP_COMPOSER_ENVIRONMENT} \
+          --location ${GCP_COMPOSER_LOCATION} \
+          --update-dag-run
+
+    - name: Deploy to dev environment
+      if: ${{ github.ref == 'refs/heads/dev' }}
+      run: |
+        gcloud composer environments update ${GCP_COMPOSER_ENVIRONMENT} \
+          --location ${GCP_COMPOSER_LOCATION} \
+          --update-dag-run
+```
+second way
+
+```
+name: Deploy to Cloud Composer
+
+on:
+  push:
+    branches:
+      - dev
+      - features/*
+
+env:
+  GCP_PROJECT: my-gcp-project
+  GCP_COMPOSER_LOCATION: us-central1
+  GCP_COMPOSER_ENVIRONMENT: my-composer-environment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Authenticate to GCP
+      uses: google-auth/setup-gcloud@v2
+      with:
+        service_account_email: ${{ secrets.GCP_SA_EMAIL }}
+        project_id: ${{ env.GCP_PROJECT }}
+
+    - name: Deploy to Cloud Composer
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+          gcloud composer environments update ${GCP_COMPOSER_ENVIRONMENT} \
+            --location ${GCP_COMPOSER_LOCATION} \
+            --update-dag
+        else
+          gcloud composer environments update ${GCP_COMPOSER_ENVIRONMENT} \
+            --location ${GCP_COMPOSER_LOCATION} \
+            --update-dag-run
+        fi
+```
