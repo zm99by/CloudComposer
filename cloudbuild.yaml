@@ -2,4 +2,4 @@ steps:
 - name: 'gcr.io/cloud-builders/git'
   args: ['clone', '--recursive', 'https://github.com/zm99by/CloudComposer']
 - name: 'gcr.io/cloud-builders/gsutil'
-  args: ['cp', '-r', '/*', 'gs://testbucket_123_123/']
+  args: ['cp', '-r', '/README.md', 'gs://testbucket_123_123/']
