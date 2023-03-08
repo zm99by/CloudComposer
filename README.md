@@ -13,6 +13,50 @@ Here's a basic outline of the steps to deploy to Cloud Composer using GitHub Act
 Here is an example of a GitHub Actions workflow that deploys to Cloud Composer:
 
 ```yaml
+name: Upload DAGs to Cloud Storage
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  PROJECT_ID: <your-project-id>
+  REGION: <your-region>
+  BUCKET_NAME: <your-bucket-name>
+
+jobs:
+  upload-dags:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Download DAGs
+      run: |
+        mkdir dags
+        cp -r ./*.py ./dags
+
+    - name: Upload DAGs to Cloud Storage
+      run: |
+        gsutil cp -r ./dags gs://${{ env.BUCKET_NAME }}/dags/
+
+    - name: Update Cloud Composer environment
+      run: |
+        gcloud composer environments update <environment_name> --location ${{ env.REGION }} --update-dags
+
+```
+
+---
+
+```yaml
 name: Deploy DAGs to Composer
 
 on:
