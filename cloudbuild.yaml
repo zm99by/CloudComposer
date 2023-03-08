@@ -1,0 +1,5 @@
+steps:
+- name: 'gcr.io/cloud-builders/git'
+  args: ['clone', '--recursive', 'https://github.com/zm99by/CloudComposer', '/workspace']
+- name: 'gcr.io/cloud-builders/gsutil'
+  args: ['cp', '-r', '/*', 'gs://testbucket_123_123/']
